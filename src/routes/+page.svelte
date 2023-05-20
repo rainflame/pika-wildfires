@@ -1,2 +1,6 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script>
+  import Map from "../lib/components/Map.svelte";
+</script>
+
+<h1>Testing</h1>
+<Map />
