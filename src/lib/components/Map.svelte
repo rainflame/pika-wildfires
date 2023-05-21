@@ -4,7 +4,7 @@
   import * as maplibregl from "maplibre-gl";
   import * as pmtiles from "pmtiles";
   import type { FireProperties } from "$lib/types/fire";
-  //   import layers from "protomaps-themes-base";
+  import layers from "protomaps-themes-base";
 
   import "maplibre-gl/dist/maplibre-gl.css";
   import PopupContent from "./PopupContent.svelte";
@@ -26,15 +26,21 @@
         sources: {
           protomaps: {
             type: "vector",
-            url: "pmtiles://http://localhost:8080/fire.pmtiles",
+            url: "pmtiles://http://localhost:8080/us-west.pmtiles",
             attribution:
               '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
           },
+          fire: {
+            type: "vector",
+            url: "pmtiles://http://localhost:8080/fire.pmtiles",
+            attribution: "USFS",
+          },
         },
         layers: [
+          ...layers("protomaps", "light"),
           {
             id: "fire",
-            source: "protomaps",
+            source: "fire",
             "source-layer": "fire",
             type: "fill",
             paint: {
