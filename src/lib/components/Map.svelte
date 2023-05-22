@@ -12,7 +12,7 @@
   const dispatch = createEventDispatcher();
   let popup: maplibregl.Popup | null = null;
   let popupContainer: HTMLElement | null = null;
-  let currentProperties: FireProperties = null;
+  let currentProperties: Array<FireProperties> = [];
 
   onMount(() => {
     let protocol = new pmtiles.Protocol();
@@ -22,6 +22,8 @@
       container: "map",
       style: {
         version: 8,
+        zoom: 5,
+        center: [-122.3917, 40.5865],
         glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
         sources: {
           protomaps: {
@@ -32,12 +34,12 @@
           },
           fire: {
             type: "vector",
-            url: "pmtiles://http://localhost:8080/fire.pmtiles",
-            attribution: "USFS",
+            url: "pmtiles://http://localhost:8080/merged.pmtiles",
+            attribution: "USFS NIFC",
           },
         },
         layers: [
-          ...layers("protomaps", "light"),
+          ...layers("protomaps", "grayscale"),
           {
             id: "fire",
             source: "fire",
@@ -60,18 +62,21 @@
       // Perform actions based on the clicked features
     });
 
+    glmap.on("zoom", () => {
+      console.log(glmap.getZoom());
+    });
+
     glmap.on("mouseenter", "fire", (e) => {
       const features = e.features;
       if (!features || features.length === 0) return;
 
-      const properties = features[0].properties;
+      currentProperties = features.map((f) => f.properties as FireProperties);
       const coordinates = e.lngLat;
-
-      currentProperties = properties as FireProperties;
 
       popup = new maplibregl.Popup({
         closeButton: false,
         closeOnClick: false,
+        anchor: "top",
       })
         .setLngLat(coordinates)
         .setDOMContent(popupContainer!)
@@ -84,9 +89,7 @@
       const features = e.features;
       if (!features || features.length === 0) return;
 
-      const properties = features[0].properties;
-
-      currentProperties = properties as FireProperties;
+      currentProperties = features.map((f) => f.properties as FireProperties);
 
       const coordinates = e.lngLat;
       if (popup)
@@ -98,20 +101,19 @@
       if (popup) {
         popup.remove();
         popup = null;
-        currentProperties = null;
+        currentProperties = [];
       }
     });
   });
 
   const handlePopupOpen = (properties: any) => {
-    currentProperties = properties as FireProperties;
-    console.log(properties);
+    currentProperties = properties;
   };
 </script>
 
 <div id="map" />
 
-<div bind:this={popupContainer}>
+<div bind:this={popupContainer} class="popup-container">
   {#if currentProperties}
     <PopupContent
       properties={currentProperties}
@@ -123,5 +125,12 @@
 <style>
   #map {
     height: 80vh;
+  }
+
+  /* :global(.maplibregl-popup-content) {
+    background-color: beige;
+  } */
+  :global(.maplibregl-popup) {
+    max-width: none !important;
   }
 </style>

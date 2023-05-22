@@ -13,20 +13,22 @@
   };
 
   const setFilter = () => {
-    addFilter("fire", [[">=", ["get", "FIREYEAR"], 1950]]);
+    addFilter("fire", [[">=", ["get", "YEAR"], 1950]]);
   };
 
   const setSizeFilter = () => {
-    addFilter("fire", [[">=", ["get", "GISACRES"], 2000]]);
+    addFilter("fire", [[">=", ["get", "ACRES"], 2000]]);
   };
 
   const setColors = () => {
     $map?.setPaintProperty("fire", "fill-color", [
       "interpolate",
       ["linear"],
-      ["get", "FIREYEAR"],
+      ["get", "YEAR"],
       1950,
       "rgba(255, 0, 0, 0.1)",
+      2010,
+      "rgba(255, 0, 0, 0.5)",
       2023,
       "rgba(255, 0, 0, 1)",
     ]);
