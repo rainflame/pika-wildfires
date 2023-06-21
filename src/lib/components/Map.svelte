@@ -4,10 +4,13 @@
   import * as maplibregl from "maplibre-gl";
   import * as pmtiles from "pmtiles";
   import type { FireProperties } from "$lib/types/fire";
-  import layers from "protomaps-themes-base";
+  import style from "$lib/assets/style.json";
 
   import "maplibre-gl/dist/maplibre-gl.css";
   import PopupContent from "./PopupContent.svelte";
+
+  export let leftPadding = 0;
+  export let transitionDuration = 250;
 
   const dispatch = createEventDispatcher();
   let popup: maplibregl.Popup | null = null;
@@ -20,11 +23,18 @@
 
     const glmap = new maplibregl.Map({
       container: "map",
+      maxBounds: [
+        [-127.850165, 29.983312],
+        [-100.336147, 50.059513],
+      ],
+      center: [-116.418257, 45.630287],
+      zoom: 5.35,
       style: {
         version: 8,
         zoom: 5,
         center: [-122.3917, 40.5865],
-        glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
+        glyphs: "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+        // glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
         sources: {
           protomaps: {
             type: "vector",
@@ -34,12 +44,23 @@
           },
           fire: {
             type: "vector",
-            url: "pmtiles://http://localhost:8080/merged.pmtiles",
+            url: "pmtiles://http://localhost:8080/fires.pmtiles",
             attribution: "USFS NIFC",
+          },
+          terrarium: {
+            type: "raster-dem",
+            tiles: [
+              "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+            ],
+            minzoom: 0,
+            maxzoom: 15,
+            tileSize: 256,
+            encoding: "terrarium",
           },
         },
         layers: [
-          ...layers("protomaps", "grayscale"),
+          ...(style.layers as maplibregl.LayerSpecification[]),
+          //   ...layers("protomaps", "grayscale"),
           {
             id: "fire",
             source: "fire",
@@ -109,6 +130,14 @@
   const handlePopupOpen = (properties: any) => {
     currentProperties = properties;
   };
+
+  $: {
+    if ($map !== null)
+      $map.easeTo({
+        padding: { left: leftPadding },
+        duration: transitionDuration,
+      });
+  }
 </script>
 
 <div id="map" />
@@ -124,7 +153,8 @@
 
 <style>
   #map {
-    height: 80vh;
+    height: 100vh;
+    width: 100vw;
   }
 
   /* :global(.maplibregl-popup-content) {

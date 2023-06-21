@@ -40,13 +40,15 @@ ogr2ogr -f "ESRI Shapefile" NIFCPerimeters/edit-1.shp NIFCPerimeters/Perimeters.
 
 ogr2ogr -f "ESRI Shapefile" NIFCPerimeters/edit-2.shp NIFCPerimeters/edit-1.shp -dialect SQLite -sql "SELECT CAST(YEAR AS date) AS YEAR, ACRES, CAUSE, NAME, * FROM \"edit-1\"" 
 
-ogrinfo NIFCPerimeters/edit-2.shp -sql "ALTER TABLE edit-2 ADD COLUMN SOURCE VARCHAR(255)"
+ogr2ogr -f "ESRI Shapefile" NIFCPerimeters/edit-3.shp NIFCPerimeters/edit-2.shp -dialect SQLite -sql "SELECT YEAR, ACRES, CAUSE, NAME, * FROM \"edit-2\" WHERE YEAR >= 2021" 
 
-ogrinfo NIFCPerimeters/edit-2.shp -dialect SQLite -sql "UPDATE \"edit-2\" SET SOURCE = 'NIFC'"
+ogrinfo NIFCPerimeters/edit-3.shp -sql "ALTER TABLE edit-3 ADD COLUMN SOURCE VARCHAR(255)"
+
+ogrinfo NIFCPerimeters/edit-3.shp -dialect SQLite -sql "UPDATE \"edit-3\" SET SOURCE = 'NIFC'"
 
 echo -e "\n******* Merging USFS and NIFC datasets *******\n"
 
-ogr2ogr -f "ESRI Shapefile" merged.shp NIFCPerimeters/edit-2.shp -dialect SQLite -sql "SELECT p.NAME, p.YEAR, p.ACRES, p.CAUSE, 'NIFC' AS SOURCE, p.geometry FROM \"edit-2\" p UNION SELECT f.NAME, f.YEAR, f.ACRES, f.CAUSE, 'USFS' AS SOURCE, f.geometry FROM 'USFSPerimeters/edit-3.shp'.edit-3 f" -nln merged
+ogr2ogr -f "ESRI Shapefile" merged.shp NIFCPerimeters/edit-3.shp -dialect SQLite -sql "SELECT p.NAME, p.YEAR, p.ACRES, p.CAUSE, 'NIFC' AS SOURCE, p.geometry FROM \"edit-3\" p UNION SELECT f.NAME, f.YEAR, f.ACRES, f.CAUSE, 'USFS' AS SOURCE, f.geometry FROM 'USFSPerimeters/edit-3.shp'.edit-3 f" -nln merged
 
 ogr2ogr -f GeoJSON merged.geojson merged.shp -progress
 

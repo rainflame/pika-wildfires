@@ -1,9 +1,25 @@
-<script>
+<script type="ts">
   import Sidebar from "$lib/components/Sidebar.svelte";
   import Map from "$lib/components/Map.svelte";
+
+  let sidebarOpen = true;
+  let sidebarWidth = 300;
+  let transitionDuration = 500;
 </script>
 
-<h1>Testing</h1>
+<Sidebar
+  {sidebarWidth}
+  {transitionDuration}
+  on:sidebarVisibilityChange={(e) => (sidebarOpen = e.detail.open)}
+/>
+<Map {transitionDuration} leftPadding={sidebarOpen ? sidebarWidth + 60 : 0} />
 
-<Sidebar />
-<Map />
+<style>
+  :global(body) {
+    margin: 0;
+  }
+
+  :global(*) {
+    box-sizing: border-box;
+  }
+</style>
