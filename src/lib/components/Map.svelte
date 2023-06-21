@@ -1,7 +1,7 @@
 <script lang="ts">
   import { map } from "$lib/stores/map";
   import { createEventDispatcher, onMount } from "svelte";
-  import * as maplibregl from "maplibre-gl";
+  import maplibregl from "maplibre-gl";
   import * as pmtiles from "pmtiles";
   import type { FireProperties } from "$lib/types/fire";
   import style from "$lib/assets/style.json";
@@ -46,16 +46,6 @@
             type: "vector",
             url: "pmtiles://http://localhost:8080/fires.pmtiles",
             attribution: "USFS NIFC",
-          },
-          terrarium: {
-            type: "raster-dem",
-            tiles: [
-              "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
-            ],
-            minzoom: 0,
-            maxzoom: 15,
-            tileSize: 256,
-            encoding: "terrarium",
           },
         },
         layers: [
