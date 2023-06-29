@@ -13,13 +13,3 @@
   on:sidebarVisibilityChange={(e) => (sidebarOpen = e.detail.open)}
 />
 <Map {transitionDuration} leftPadding={sidebarOpen ? sidebarWidth + 60 : 0} />
-
-<style>
-  :global(body) {
-    margin: 0;
-  }
-
-  :global(*) {
-    box-sizing: border-box;
-  }
-</style>
