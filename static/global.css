@@ -16,6 +16,28 @@ body {
 
   margin: 0;
   padding: 0;
+
+  --primary: #cadffa;
+  --primary-hover: #9ac0f1;
+  --secondary: #fff;
+  --secondary-hover: #e7edf5;
+
+  --black: #0000;
+  --greyscale-10: #1a1a1a;
+  --greyscale-20: #333333;
+  --greyscale-30: #4d4d4d;
+  --greyscale-40: #666666;
+  --greyscale-50: #808080;
+  --greyscale-60: #999999;
+  --greyscale-70: #b3b3b3;
+  --greyscale-80: #cccccc;
+  --greyscale-90: #e6e6e6;
+  --greyscale-95: #f2f2f2;
+  --white: #ffffff;
+
+  --radius-sm: 3px;
+
+  --light-height: 0px 1px 4px 0px rgba(0, 0, 0, 0.15);
 }
 
 * {

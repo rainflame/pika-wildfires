@@ -1,11 +1,42 @@
 <script lang="ts">
-  import { clamp } from "$lib/utils/clamp";
+  import { normalize } from "$lib/utils/normalize";
+  import debounce from "lodash/debounce";
+  import { onMount } from "svelte";
 
-  export let start = 0;
-  export let end = 1;
+  export let min = 0;
+  export let max = 10;
 
-  let leftHandle: HTMLDivElement;
-  let body: HTMLDivElement;
+  export let defaultMin = 0;
+  export let defaultMax = 10;
+
+  export let onMinChange: (newMin: number) => any = (min) => {};
+  export let onMaxChange: (newMax: number) => any = (max) => {};
+  export let transformPercentToScale: (value: number) => number = (n) => n;
+  export let transformScaleToPercent: (scale: number) => number = (n) => n;
+
+  export let formatDisplayNumber: (n: number) => string;
+
+  let start = { percent: 0, value: "0" };
+  let end = { percent: 1, value: "1" };
+
+  onMount(() => {
+    start = {
+      percent: transformScaleToPercent(
+        normalize(defaultMin, min, max, 0, 1, false)
+      ),
+      value: formatDisplayNumber(defaultMin),
+    };
+    end = {
+      percent: transformScaleToPercent(
+        normalize(defaultMax, min, max, 0, 1, false)
+      ),
+      value: formatDisplayNumber(defaultMax),
+    };
+
+    onMinChange = debounce(onMinChange, 100);
+    onMaxChange = debounce(onMaxChange, 100);
+  });
+
   let slider: HTMLDivElement;
 
   function draggable(node: HTMLDivElement) {
@@ -105,36 +136,51 @@
       },
     };
   }
+
   function setHandlePosition(which: "start" | "end") {
     return function (evt: { detail: { x: number } }) {
       const { left, right } = slider.getBoundingClientRect();
       const parentWidth = right - left;
-      const p = Math.min(Math.max((evt.detail.x - left) / parentWidth, 0), 1);
+      let p = Math.min(Math.max((evt.detail.x - left) / parentWidth, 0), 1);
+
       if (which === "start") {
-        start = p;
-        end = Math.max(end, p);
+        start = {
+          percent: p,
+          value: formatDisplayNumber(
+            normalize(transformPercentToScale(p), 0, 1, min, max, true)
+          ),
+        };
+        const endP = Math.max(end.percent, p);
+        end = {
+          percent: endP,
+          value: formatDisplayNumber(
+            normalize(transformPercentToScale(endP), 0, 1, min, max, true)
+          ),
+        };
+
+        onMinChange(
+          normalize(transformPercentToScale(p), 0, 1, min, max, true)
+        );
       } else {
-        start = Math.min(p, start);
-        end = p;
+        end = {
+          percent: p,
+          value: formatDisplayNumber(
+            normalize(transformPercentToScale(p), 0, 1, min, max, true)
+          ),
+        };
+
+        const startP = Math.min(start.percent, p);
+        start = {
+          percent: startP,
+          value: formatDisplayNumber(
+            normalize(transformPercentToScale(startP), 0, 1, min, max, true)
+          ),
+        };
+        onMaxChange(
+          normalize(transformPercentToScale(p), 0, 1, min, max, true)
+        );
       }
     };
-  }
-
-  function setHandlesFromBody(evt: CustomEvent) {
-    const { width } = body.getBoundingClientRect();
-    const { left, right } = slider.getBoundingClientRect();
-    const parentWidth = right - left;
-    const leftHandleLeft = leftHandle.getBoundingClientRect().left;
-    const pxStart = clamp(
-      leftHandleLeft + evt.detail.dx - left,
-      0,
-      parentWidth - width
-    );
-    const pxEnd = clamp(pxStart + width, width, parentWidth);
-    const pStart = pxStart / parentWidth;
-    const pEnd = pxEnd / parentWidth;
-    start = pStart;
-    end = pEnd;
   }
 </script>
 
@@ -142,60 +188,65 @@
   <div class="slider" bind:this={slider}>
     <div
       class="body"
-      bind:this={body}
-      use:draggable
-      on:dragmove|preventDefault|stopPropagation={setHandlesFromBody}
       style="
-				left: {100 * start}%;
-				right: {100 * (1 - end)}%;
+				left: {100 * start.percent}%;
+				right: {100 * (1 - end.percent)}%;
 			"
     />
     <div
       class="handle"
-      bind:this={leftHandle}
       data-which="start"
       use:draggable
       on:dragmove|preventDefault|stopPropagation={setHandlePosition("start")}
       style="
-				left: {100 * start}%
+				left: {100 * start.percent}%
 			"
-    />
+    >
+      <div class="handle-label">
+        {start.value}
+      </div>
+    </div>
     <div
       class="handle"
       data-which="end"
       use:draggable
       on:dragmove|preventDefault|stopPropagation={setHandlePosition("end")}
       style="
-				left: {100 * end}%
+				left: {100 * end.percent}%
 			"
-    />
+    >
+      <div class="handle-label">
+        {end.value}
+      </div>
+    </div>
   </div>
 </div>
 
 <style>
   .double-range-container {
     width: 100%;
-    height: 20px;
+    height: 50px;
     user-select: none;
-    box-sizing: border-box;
     white-space: nowrap;
   }
   .slider {
+    border: 1px solid var(--greyscale-70);
     position: relative;
     width: 100%;
     height: 6px;
     top: 50%;
     transform: translate(0, -50%);
-    background-color: #e2e2e2;
-    box-shadow: inset 0 7px 10px -5px #4a4a4a, inset 0 -1px 0px 0px #9c9c9c;
-    border-radius: 1px;
+    background-color: var(--greyscale-80);
+    border-radius: var(--radius-sm);
   }
+
   .handle {
     position: absolute;
     top: 50%;
     width: 0;
     height: 0;
   }
+
   .handle:after {
     content: " ";
     box-sizing: border-box;
@@ -203,21 +254,27 @@
     border-radius: 50%;
     width: 16px;
     height: 16px;
-    background-color: #fdfdfd;
-    border: 1px solid #7b7b7b;
+    background-color: var(--primary);
+    border: 1px solid var(--greyscale-40);
     transform: translate(-50%, -50%);
+    box-shadow: var(--light-height);
+    cursor: ew-resize;
   }
-  /* .handle[data-which="end"]:after{
-		transform: translate(-100%, -50%);
-	} */
+
   .handle:active:after {
-    background-color: #ddd;
+    background-color: var(--primary-hover);
     z-index: 9;
+  }
+
+  .handle-label {
+    position: absolute;
+    top: 15px;
+    transform: translate(-50%, -50%);
   }
   .body {
     top: 0;
     position: absolute;
-    background-color: #34a1ff;
+    background-color: var(--primary);
     bottom: 0;
   }
 </style>
