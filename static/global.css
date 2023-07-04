@@ -11,16 +11,18 @@
 }
 
 body {
-  font-family: "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-
   margin: 0;
   padding: 0;
+
+  --sans: "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 
   --primary: #cadffa;
   --primary-hover: #9ac0f1;
   --secondary: #fff;
   --secondary-hover: #e7edf5;
+
+  --focused: #6a8ce3;
 
   --black: #0000;
   --greyscale-10: #1a1a1a;
@@ -38,8 +40,15 @@ body {
   --radius-sm: 3px;
 
   --light-height: 0px 1px 4px 0px rgba(0, 0, 0, 0.15);
+
+  font-family: var(--sans);
 }
 
 * {
   box-sizing: border-box;
+}
+
+a,
+a:visited {
+  color: var(--focused);
 }

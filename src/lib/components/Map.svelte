@@ -57,7 +57,7 @@
             "source-layer": "fire",
             type: "fill",
             paint: {
-              "fill-color": "#000000",
+              "fill-color": "rgba(0,0,0,0.5)",
             },
           },
         ],
@@ -147,9 +147,6 @@
     width: 100vw;
   }
 
-  /* :global(.maplibregl-popup-content) {
-    background-color: beige;
-  } */
   :global(.maplibregl-popup) {
     max-width: none !important;
   }

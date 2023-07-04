@@ -4,6 +4,6 @@ type FireProperties = {
   ACRES: number;
   CAUSE: string;
   SOURCE: string;
-} | null;
+};
 
 export type { FireProperties };

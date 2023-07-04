@@ -2,10 +2,14 @@
   type ButtonVariant = "primary" | "secondary";
 
   export let variant: ButtonVariant = "secondary";
+  export let text: string | null = null;
 </script>
 
 <button class={variant} on:click>
-  <slot />
+  <slot name="icon" />
+  {#if text}
+    {text}
+  {/if}
 </button>
 
 <style>
@@ -18,7 +22,7 @@
     cursor: pointer;
 
     border-radius: var(--radius-sm);
-    border: 1px solid var(--greyscale-20, #333);
+    border: 1px solid var(--greyscale-50, #333);
     box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.15),
       0px 1px 0px 0px rgba(255, 255, 255, 0.3) inset;
 
