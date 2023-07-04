@@ -21,6 +21,9 @@
   let startLabel: HTMLDivElement;
   let endLabel: HTMLDivElement;
 
+  let endLabelOffset = 0;
+  let startLabelOffset = 0;
+
   let pxFromStart = 0;
   let pxFromEnd = 0;
 
@@ -163,12 +166,21 @@
           ),
         };
         const endP = Math.max(end.percent, p);
+
         end = {
           percent: endP,
           value: formatDisplayNumber(
             normalize(transformPercentToScale(endP), 0, 1, min, max, true)
           ),
         };
+
+        if (endP === p) {
+          // the start and end are the same, move both and dispatch onMaxChange
+          pxFromEnd = Math.max(right - evt.detail.x, 0);
+          onMaxChange(
+            normalize(transformPercentToScale(p), 0, 1, min, max, true)
+          );
+        }
 
         onMinChange(
           normalize(transformPercentToScale(p), 0, 1, min, max, true)
@@ -183,17 +195,76 @@
         };
 
         const startP = Math.min(start.percent, p);
+
         start = {
           percent: startP,
           value: formatDisplayNumber(
             normalize(transformPercentToScale(startP), 0, 1, min, max, true)
           ),
         };
+
+        if (startP === p) {
+          // the start and end are the same, move both and dispatch onMinChange
+          pxFromStart = Math.max(evt.detail.x - left, 0);
+          onMinChange(
+            normalize(transformPercentToScale(p), 0, 1, min, max, true)
+          );
+        }
+
         onMaxChange(
           normalize(transformPercentToScale(p), 0, 1, min, max, true)
         );
       }
     };
+  }
+
+  $: {
+    if (startLabel && endLabel) {
+      // calculate the offsets
+      startLabelOffset =
+        startLabel.getBoundingClientRect().width / 2 - pxFromStart;
+      endLabelOffset = endLabel.getBoundingClientRect().width / 2 - pxFromEnd;
+
+      if (startLabelOffset < 0) {
+        startLabelOffset = 0;
+      }
+      if (endLabelOffset < 0) {
+        endLabelOffset = 0;
+      }
+
+      const leftFromStart = pxFromStart;
+      const rightFromStart = slider.getBoundingClientRect().width - pxFromEnd;
+
+      const rightIntersectionZone =
+        rightFromStart -
+        endLabel.getBoundingClientRect().width / 2 -
+        startLabelOffset;
+      const leftIntersectionZone =
+        leftFromStart +
+        startLabel.getBoundingClientRect().width / 2 +
+        endLabelOffset;
+
+      const intersectionDist = leftIntersectionZone - rightIntersectionZone;
+
+      if (leftFromStart === rightFromStart) {
+        // the two handles are on top of each other, don't offset the labels
+        startLabelOffset = 0;
+        endLabelOffset = 0;
+      } else if (intersectionDist > 0) {
+        // there's an intersection, adjust the offset to account for it
+        if (startLabelOffset > 0) {
+          // adjust the end label offset to accommodate the intersection
+          endLabelOffset = -1 * intersectionDist;
+        } else if (endLabelOffset > 0) {
+          // adjust the start label offset to accommodate the intersection
+          startLabelOffset = -1 * intersectionDist;
+        } else {
+          // neither label has an offset, so split the difference
+          startLabelOffset = (-1 * intersectionDist) / 2;
+          endLabelOffset = (-1 * intersectionDist) / 2;
+        }
+      }
+    }
   }
 </script>
 
@@ -226,11 +297,7 @@
       <div
         class="handle-label"
         bind:this={startLabel}
-        style={pxFromStart < startLabel?.getBoundingClientRect().width / 2
-          ? `transform: translate(calc(-50% + ${
-              startLabel?.getBoundingClientRect().width / 2 - pxFromStart
-            }px), -50%);`
-          : null}
+        style={`transform: translate(calc(-50% + ${startLabelOffset}px), -50%);`}
       >
         {start.value}
       </div>
@@ -247,11 +314,7 @@
       <div
         class="handle-label"
         bind:this={endLabel}
-        style={pxFromEnd < endLabel?.getBoundingClientRect().width / 2
-          ? `transform: translate(calc(-50% - ${
-              endLabel?.getBoundingClientRect().width / 2 - pxFromEnd
-            }px), -50%);`
-          : null}
+        style={`transform: translate(calc(-50% - ${endLabelOffset}px), -50%);`}
       >
         {end.value}
       </div>
