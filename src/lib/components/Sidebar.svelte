@@ -6,8 +6,6 @@
 
   import { map } from "$lib/stores/map";
 
-  import type { FilterSpecification } from "maplibre-gl";
-
   import DoubleSlider from "./DoubleSlider.svelte";
   import Button from "./Button.svelte";
   import Label from "./Label.svelte";
@@ -21,6 +19,10 @@
   import Tag from "./Tag.svelte";
   import Drop from "./Icons/Drop.svelte";
   import type { FireProperties } from "$lib/types/fire";
+  import { filter } from "$lib/stores/filter";
+  import { get } from "svelte/store";
+  import type { FilterArray } from "$lib/types/filter";
+  import type { FilterSpecification } from "maplibre-gl";
 
   export let sidebarWidth = 300;
   export let transitionDuration = 250;
@@ -35,13 +37,6 @@
   const DEFAULT_SIZE_MAX = 380000;
   const DEFAULT_SIZE_MIN = 5000;
 
-  let filter = [
-    [">=", ["get", "YEAR"], DEFAULT_YEAR_MIN],
-    ["<=", ["get", "YEAR"], DEFAULT_YEAR_MAX],
-    [">=", ["get", "ACRES"], DEFAULT_SIZE_MIN],
-    ["<=", ["get", "ACRES"], DEFAULT_SIZE_MAX],
-  ];
-
   const dispatch = createEventDispatcher();
 
   $: {
@@ -49,34 +44,55 @@
   }
 
   onMount(() => {
-    adjustYearMax(DEFAULT_YEAR_MAX);
-    adjustYearMin(DEFAULT_YEAR_MIN);
-    adjustSizeMax(DEFAULT_SIZE_MAX);
-    adjustSizeMin(DEFAULT_SIZE_MIN);
+    filter.set([
+      [">=", ["get", "YEAR"], DEFAULT_YEAR_MIN],
+      ["<=", ["get", "YEAR"], DEFAULT_YEAR_MAX],
+      [">=", ["get", "ACRES"], DEFAULT_SIZE_MIN],
+      ["<=", ["get", "ACRES"], DEFAULT_SIZE_MAX],
+    ]);
+
+    filter.subscribe((filterValue) => {
+      if (filterValue) {
+        $map?.setFilter("fire", ["all", ...filterValue] as FilterSpecification);
+        updateFill(coloredBy, filterValue);
+      }
+    });
   });
 
-  const applyFilter = () => {
-    $map?.setFilter("fire", ["all", ...filter] as FilterSpecification);
-  };
-
   const adjustYearMax = (newMax: number) => {
-    filter[1][2] = newMax;
-    applyFilter();
+    filter.update((filterValue) => {
+      if (filterValue) {
+        filterValue[1][2] = newMax;
+      }
+      return filterValue;
+    });
   };
 
   const adjustYearMin = (newMin: number) => {
-    filter[0][2] = newMin;
-    applyFilter();
+    filter.update((filterValue) => {
+      if (filterValue) {
+        filterValue[0][2] = newMin;
+      }
+      return filterValue;
+    });
   };
 
   const adjustSizeMin = (newMin: number) => {
-    filter[2][2] = newMin;
-    applyFilter();
+    filter.update((filterValue) => {
+      if (filterValue) {
+        filterValue[2][2] = newMin;
+      }
+      return filterValue;
+    });
   };
 
   const adjustSizeMax = (newMax: number) => {
-    filter[3][2] = newMax;
-    applyFilter();
+    filter.update((filterValue) => {
+      if (filterValue) {
+        filterValue[3][2] = newMax;
+      }
+      return filterValue;
+    });
   };
 
   const toggleFill = (property: keyof FireProperties) => {
@@ -87,31 +103,39 @@
     }
   };
 
+  const updateFill = (
+    coloredBy: keyof FireProperties | null,
+    filter: FilterArray | null
+  ) => {
+    if (coloredBy === "YEAR" && filter) {
+      $map?.setPaintProperty("fire", "fill-color", [
+        "interpolate",
+        ["linear"],
+        ["get", "YEAR"],
+        filter[0][2],
+        "rgba(0, 0, 0, 0.75)",
+        filter[1][2],
+        "rgba(255, 0, 0, 0.75)",
+      ]);
+    } else if (coloredBy === "ACRES" && filter) {
+      $map?.setPaintProperty("fire", "fill-color", [
+        "interpolate",
+        ["linear"],
+        ["get", "ACRES"],
+        filter[2][2],
+        "rgba(0, 0, 0, 0.75)",
+        filter[3][2],
+        "rgba(255, 0, 0, 0.75)",
+      ]);
+    } else if (coloredBy === null) {
+      $map?.setPaintProperty("fire", "fill-color", "rgba(0, 0, 0, 0.5)");
+    }
+  };
+
   $: {
     if ($map?.loaded()) {
-      if (coloredBy === "YEAR") {
-        $map?.setPaintProperty("fire", "fill-color", [
-          "interpolate",
-          ["linear"],
-          ["get", "YEAR"],
-          filter[0][2],
-          "rgba(255, 0, 0, 0.1)",
-          filter[1][2],
-          "rgba(255, 0, 0, 1)",
-        ]);
-      } else if (coloredBy === "ACRES") {
-        $map?.setPaintProperty("fire", "fill-color", [
-          "interpolate",
-          ["linear"],
-          ["get", "ACRES"],
-          filter[2][2],
-          "rgba(255, 0, 0, 0.1)",
-          filter[3][2],
-          "rgba(255, 0, 0, 1)",
-        ]);
-      } else if (coloredBy === null) {
-        $map?.setPaintProperty("fire", "fill-color", "rgba(0, 0, 0, 0.5)");
-      }
+      const currentFilter = get(filter);
+      updateFill(coloredBy, currentFilter);
     }
   }
 </script>
@@ -152,7 +176,7 @@
         formatDisplayNumber={(n) => n.toString()}
         colorInterpolate={coloredBy === "YEAR"
           ? {
-              start: "#C3C1C1",
+              start: "rgba(0, 0, 0, 1)",
               end: "rgba(255, 0, 0, 1)",
             }
           : null}
@@ -193,7 +217,7 @@
         }}
         colorInterpolate={coloredBy === "ACRES"
           ? {
-              start: "#C3C1C1",
+              start: "rgba(0, 0, 0, 1)",
               end: "rgba(255, 0, 0, 1)",
             }
           : null}

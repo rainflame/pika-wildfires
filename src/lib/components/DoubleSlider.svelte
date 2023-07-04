@@ -311,8 +311,24 @@
     background-color: var(--start-handle-color, var(--primary));
   }
 
+  .handle.start:active:after {
+    background-color: color-mix(
+      in srgb,
+      var(--start-handle-color, var(--primary)) 85%,
+      rgb(0, 0, 0)
+    );
+  }
+
   .handle.end::after {
     background-color: var(--end-handle-color, var(--primary));
+  }
+
+  .handle.end:active:after {
+    background-color: color-mix(
+      in srgb,
+      var(--end-handle-color, var(--primary)) 85%,
+      rgb(0, 0, 0)
+    );
   }
 
   .handle:active:after {

@@ -10,7 +10,9 @@
 <div class="popup-content">
   {#each properties as fire}
     <div class="fire-info">
-      <div class="fire-title">{toTitleCase(fire?.NAME)}</div>
+      <div class="fire-title">
+        {fire.NAME ? toTitleCase(fire?.NAME) : "Unnamed Fire"}
+      </div>
       <Divider />
       <div class="fire-stat">
         <Label>Year</Label>
