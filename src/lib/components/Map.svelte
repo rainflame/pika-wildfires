@@ -33,8 +33,8 @@
         version: 8,
         zoom: 5,
         center: [-122.3917, 40.5865],
-        glyphs: "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
-        // glyphs: "https://cdn.protomaps.com/fonts/pbf/{fontstack}/{range}.pbf",
+        // glyphs: "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+        glyphs: "http://localhost:8080/{fontstack}/{range}.pbf",
         sources: {
           protomaps: {
             type: "vector",
